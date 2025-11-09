@@ -15,11 +15,28 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path, include
+from django.views.generic import RedirectView
+from django.shortcuts import redirect
 from debug_toolbar.toolbar import debug_toolbar_urls
 
+
 urlpatterns = [
+    # Admin site url
     path('admin/', admin.site.urls),
-    path('playlists/', include('playlists.urls')),
+
+    # Redirect from login page to spotify oauth login since spotify login is required
+    path('accounts/login/', lambda request: redirect('/accounts/spotify/login/')),
+
+    # Allauth urls
     path('accounts/', include('allauth.urls')),
+
+    # Main playlists app urls
+    path('playlists/', include('playlists.urls')),
+
+    # Redirect root url to the main playlist app
+    path('', lambda request: redirect('playlists/', permanent=False)),
+
+    # Redirect any unmatched url to the main playlist app
+    path('<path:unused_path>/', RedirectView.as_view(pattern_name='index', permanent=False))
 ] + debug_toolbar_urls()
