@@ -1,42 +1,25 @@
-{% extends 'playlists/base.html' %}
-{% block title %}{{ playlist.name }}{% endblock %}
+{% extends 'base.html' %}
+
 {% block content %}
-<h2>{{ playlist.name }}</h2>
+<div class="playlist-detail">
+    <h1>{{ playlist.name }}</h1>
+    {% if playlist.description %}
+        <p>{{ playlist.description }}</p>
+    {% endif %}
 
-<form method="post" class="mb-4">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit" class="btn btn-success">Save Changes</button>
-</form>
-
-<h4>Songs</h4>
-<ul class="list-group">
-  {% for song in songs %}
-    <li class="list-group-item">
-      <a href="{% url 'song_detail' song.pk %}">{{ song.title }}</a> – {{ song.artist }}
-    </li>
-  {% empty %}
-    <li class="list-group-item">No songs in this playlist.</li>
-  {% endfor %}
-</ul>
-
-<!-- Bootstrap Modal -->
-<button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#playlistInfo">
-  Show Playlist Info
-</button>
-
-<div class="modal fade" id="playlistInfo" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Playlist Info</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        Created by: {{ playlist.created_by.username }}<br>
-        Total songs: {{ songs.count }}
-      </div>
-    </div>
-  </div>
+    <h3>Songs</h3>
+    {% if playlist.songs.all %}
+        <ul>
+            {% for song in playlist.songs.all %}
+                <li>
+                    <a href="{% url 'playlists:song_detail' song.id %}">
+                        {{ song.title }} — {{ song.artist }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>This playlist doesn’t have any songs yet.</p>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,9 +1,28 @@
-{% extends 'playlists/base.html' %}
-{% block title %}{{ song.title }}{% endblock %}
+{% extends 'base.html' %}
+
 {% block content %}
-<h2>{{ song.title }}</h2>
-<p>Artist: {{ song.artist }}</p>
-<p>Energy: {{ song.energy }}</p>
-<p>Valence: {{ song.valence }}</p>
-<p>Tempo: {{ song.tempo }}</p>
+<div class="song-detail">
+    <h1>{{ song.title }}</h1>
+    <p><strong>Artist:</strong> {{ song.artist }}</p>
+    {% if song.album %}
+        <p><strong>Album:</strong> {{ song.album }}</p>
+    {% endif %}
+
+    {% if song.spotify_id %}
+        <p><strong>Spotify ID:</strong> {{ song.spotify_id }}</p>
+    {% endif %}
+
+    <h3>Tags</h3>
+    {% if song.tags.all %}
+        <ul>
+            {% for tag in song.tags.all %}
+                <li>{{ tag.name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tags available for this song.</p>
+    {% endif %}
+
+    <p><a href="{% url 'playlists:playlist_detail' song.playlist.id %}">← Back to {{ song.playlist.name }}</a></p>
+</div>
 {% endblock %}

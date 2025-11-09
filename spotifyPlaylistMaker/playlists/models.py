@@ -1,4 +1,3 @@
-# spotifyPlaylistMaker/playlists/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib import admin
@@ -9,6 +8,10 @@ class Playlist(models.Model):
     description = models.TextField(blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Added fields for Spotify integration
+    spotify_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    cover_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -30,6 +33,15 @@ class Song(models.Model):
     title = models.CharField(max_length=100)
     artist = models.CharField(max_length=100)
     album = models.CharField(max_length=100, blank=True)
+
+    # Added Spotify integration and tag fields
+    spotify_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+
+    # Audio feature tags (Spotify API)
+    energy = models.FloatField(null=True, blank=True)
+    danceability = models.FloatField(null=True, blank=True)
+    valence = models.FloatField(null=True, blank=True)
+    tempo = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.title} - {self.artist}'

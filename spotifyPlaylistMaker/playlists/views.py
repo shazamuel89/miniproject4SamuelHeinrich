@@ -1,10 +1,12 @@
 # spotifyPlaylistMaker/playlists/views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import generic
+from allauth.socialaccount.models import SocialToken
 from .models import Playlist, Song
 from .forms import PlaylistForm
+from .utils import get_user_playlists, get_playlist_tracks, get_audio_features
+from django.urls import reverse
 
 
 def index(request):
@@ -29,6 +31,32 @@ class MyPlaylistsView(LoginRequiredMixin, generic.ListView):
         # Limit to logged in user's playlists
         return Playlist.objects.filter(created_by=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            token = SocialToken.objects.get(account__user=self.request.user, account__provider='spotify')
+            access_token = token.token
+
+            # Fetch playlists from Spotify
+            spotify_playlists = get_user_playlists(access_token)
+
+            # Store or update locally
+            for pl in spotify_playlists:
+                Playlist.objects.update_or_create(
+                    spotify_id=pl['id'],
+                    defaults={
+                        'name': pl['name'],
+                        'description': pl.get('description', ''),
+                        'created_by': self.request.user,
+                    },
+                )
+
+        except SocialToken.DoesNotExist:
+            context['error'] = "Spotify account not connected."
+
+        context['playlists'] = Playlist.objects.filter(created_by=self.request.user)
+        return context
+
 class PlaylistDetailView(LoginRequiredMixin, generic.DetailView):
     model = Playlist
     form_class = PlaylistForm
@@ -41,7 +69,46 @@ class PlaylistDetailView(LoginRequiredMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['songs'] = self.object.songs.all()
+        playlist = self.get_object()
+
+        try:
+            token = SocialToken.objects.get(account__user=self.request.user, account__provider='spotify')
+            access_token = token.token
+
+            # Fetch songs from Spotify
+            spotify_tracks = get_playlist_tracks(access_token, playlist.spotify_id)
+
+            # Store them locally
+            track_ids = []
+            for item in spotify_tracks:
+                track = item['track']
+                if track:  # sometimes null
+                    track_ids.append(track['id'])
+                    Song.objects.update_or_create(
+                        spotify_id=track['id'],
+                        defaults={
+                            'playlist': playlist,
+                            'title': track['name'],
+                            'artist': ', '.join(artist['name'] for artist in track['artists']),
+                            'album': track['album']['name'],
+                        }
+                    )
+
+            # Fetch and store audio features (energy, danceability, etc.)
+            features = get_audio_features(access_token, track_ids)
+            for song in Song.objects.filter(playlist=playlist):
+                f = features.get(song.spotify_id)
+                if f:
+                    song.energy = f.get('energy')
+                    song.danceability = f.get('danceability')
+                    song.valence = f.get('valence')
+                    song.tempo = f.get('tempo')
+                    song.save()
+
+        except SocialToken.DoesNotExist:
+            context['error'] = "Spotify account not connected."
+
+        context['songs'] = Song.objects.filter(playlist=playlist)
         return context
 
     def get_success_url(self):

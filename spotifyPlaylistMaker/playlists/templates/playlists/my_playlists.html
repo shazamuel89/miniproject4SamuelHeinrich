@@ -1,14 +1,27 @@
-{% extends 'playlists/base.html' %}
-{% block title %}My Playlists{% endblock %}
+{% extends 'base.html' %}
 {% block content %}
-<h2>My Playlists</h2>
-<ul class="list-group">
-  {% for playlist in playlists %}
-    <li class="list-group-item">
-      <a href="{% url 'playlist_detail' playlist.pk %}">{{ playlist.name }}</a>
-    </li>
-  {% empty %}
-    <li class="list-group-item">You have no playlists yet.</li>
-  {% endfor %}
-</ul>
+<div class="container mt-4">
+  <h2>My Spotify Playlists</h2>
+
+  {% if error %}
+    <div class="alert alert-warning">{{ error }}</div>
+  {% endif %}
+
+  <div class="row">
+    {% for playlist in playlists %}
+      <div class="col-md-4 mb-3">
+        <div class="card">
+          {% if playlist.cover_url %}
+            <img src="{{ playlist.cover_url }}" class="card-img-top" alt="Playlist cover">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ playlist.name }}</h5>
+            <p class="card-text">{{ playlist.description|default:"No description" }}</p>
+            <a href="{% url 'playlists:playlist_detail' playlist.pk %}" class="btn btn-success">View Songs</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

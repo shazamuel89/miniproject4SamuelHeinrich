@@ -161,3 +161,5 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {'show_dialog': 'true'},
     }
 }
+
+SOCIALACCOUNT_STORE_TOKENS = True
