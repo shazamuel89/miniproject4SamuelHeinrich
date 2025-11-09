@@ -1,0 +1,15 @@
+{% extends 'playlists/base.html' %}
+{% block title %}All Playlists{% endblock %}
+{% block content %}
+<h1>All Playlists</h1>
+<ul class="list-group">
+  {% for playlist in playlists %}
+    <li class="list-group-item">
+      <a href="{% url 'playlist_detail' playlist.pk %}">{{ playlist.name }}</a>
+      (by {{ playlist.created_by.username }})
+    </li>
+  {% empty %}
+    <li class="list-group-item">No playlists found.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
