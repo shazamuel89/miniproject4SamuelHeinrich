@@ -3,34 +3,73 @@
 ### Mini Project 4
  
  
-# Project Title
+# Spotify Playlist Maker
  
-Simple overview of use/purpose.
+A simple Django web app that allows users to register, log in, and create personalized playlists. Users can add songs, view other users’ playlists, and manage their own content through a clean Bootstrap-styled interface.
  
 ## Description
  
-An in-depth paragraph about your project and overview of use.
+This project demonstrates how to build a small but functional web application using Django. It includes user authentication, form handling, database models, an admin interface, and dynamic rendering of templates. The web app focuses on playlist management - each user can create and view playlists with song entries, while administrators can manage all data through Django’s admin panel.
+
+The site uses Bootstrap for layout and styling, including modals for playlist creations.
  
 ## Getting Started
  
 ### Dependencies
  
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-* List pip install instructions.
+* Python 3.11 or higher
+* Django 5.0 or higher
+* Bootstrap 5 (loaded via CDN)
+* OS: Works on Windows, macOS, or Linux
+* Required Pip packages (instructions below)
+
  
 ### Installing
  
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Clone the GitHub repository to your local machine:
+```
+git clone https://github.com/shazamuel89/miniproject4SamuelHeinrich.git
+cd miniproject4SamuelHeinrich
+```
+* Create and activate a virtual environment:
+```
+python -m venv venv
+source venv/bin/activate      # On macOS/Linux
+venv\Scripts\activate         # On Windows
+```
+* Install required packages:
+```
+pip install -r requirements.txt
+```
+* Verify that Django is installed correctly:
+```
+python -m django --version
+```
  
 ### Executing program
  
-* How to run the program
-* Step-by-step bullets
+* Make database migrations and apply them:
 ```
-code blocks for commands
+python manage.py makemigrations
+python manage.py migrate
 ```
+* Create an admin (superuser) account:
+```
+python manage.py createsuperuser
+```
+* Run the development server:
+```
+python manage.py runserver
+```
+* Open your browser and navigate to on 2 separate tabs:
+```
+http://127.0.0.1:8000/
+```
+* On the second tab, replace the text after :8000/ with:
+```
+admin/
+```
+* Log in with the admin superuser account credentials you just created
  
 ## Help
  
@@ -51,4 +90,6 @@ Samuel Heinrich
 ## Acknowledgments
  
 Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
+* [Django Documentation](https://docs.djangoproject.com/en/5.2/)
+* [Bootstrap Documentation](https://getbootstrap.com/docs/5.1/getting-started/introduction/)
+* [Django Allauth Github](https://github.com/pennersr/django-allauth/)
