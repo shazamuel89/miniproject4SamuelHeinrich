@@ -9,17 +9,14 @@ class Playlist(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Added fields for Spotify integration
+    # Spotify integration fields
     spotify_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     cover_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
-    @admin.display(
-        boolean=True,
-        description='Has songs?',
-    )
+    @admin.display(boolean=True, description='Has songs?')
     def has_songs(self):
         return self.songs.exists()
 
@@ -34,14 +31,8 @@ class Song(models.Model):
     artist = models.CharField(max_length=100)
     album = models.CharField(max_length=100, blank=True)
 
-    # Added Spotify integration and tag fields
+    # Spotify track reference
     spotify_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
-
-    # Audio feature tags (Spotify API)
-    energy = models.FloatField(null=True, blank=True)
-    danceability = models.FloatField(null=True, blank=True)
-    valence = models.FloatField(null=True, blank=True)
-    tempo = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.title} - {self.artist}'

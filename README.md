@@ -50,6 +50,7 @@ python -m django --version
  
 * Make database migrations and apply them:
 ```
+cd spotifyPlaylistMaker
 python manage.py makemigrations
 python manage.py migrate
 ```
