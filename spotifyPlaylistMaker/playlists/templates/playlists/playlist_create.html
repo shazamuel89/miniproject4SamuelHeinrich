@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5 text-light">
+  <h1 class="mb-4">Create a New Playlist</h1>
+
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPlaylistModal">
+    + New Playlist
+  </button>
+
+  <!-- Modal -->
+  <div class="modal fade" id="createPlaylistModal" tabindex="-1" aria-labelledby="createPlaylistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header border-0">
+          <h5 class="modal-title" id="createPlaylistModalLabel">Create Playlist</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post">
+          <div class="modal-body">
+            {% csrf_token %}
+            {{ form.as_p }}
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <a href="{% url 'playlists:my_playlists' %}" class="btn btn-outline-light mt-2">
+    Back to My Playlists
+  </a>
+</div>
+{% endblock %}

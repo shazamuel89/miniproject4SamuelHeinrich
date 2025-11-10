@@ -1,18 +1,18 @@
-# spotifyPlaylistMaker/playlists/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import generic
 from allauth.socialaccount.models import SocialToken
+from django.urls import reverse_lazy, reverse
 from .models import Playlist, Song
 from .forms import PlaylistForm
-from .utils import get_user_playlists, get_playlist_tracks, get_audio_features
-from django.urls import reverse
+from .utils import get_user_playlists, get_playlist_tracks, get_valid_spotify_token
 
 
 def index(request):
     # Home page that shows all created playlists from all users.
     playlists = Playlist.objects.all()
     return render(request, 'playlists/index.html', {'playlists': playlists})
+
 
 class ProfileView(LoginRequiredMixin, generic.TemplateView):
     template_name = 'playlists/profile.html'
@@ -21,6 +21,7 @@ class ProfileView(LoginRequiredMixin, generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['user'] = self.request.user
         return context
+
 
 class MyPlaylistsView(LoginRequiredMixin, generic.ListView):
     model = Playlist
@@ -34,8 +35,7 @@ class MyPlaylistsView(LoginRequiredMixin, generic.ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            token = SocialToken.objects.get(account__user=self.request.user, account__provider='spotify')
-            access_token = token.token
+            access_token = get_valid_spotify_token(self.request.user)
 
             # Fetch playlists from Spotify
             spotify_playlists = get_user_playlists(access_token)
@@ -57,6 +57,7 @@ class MyPlaylistsView(LoginRequiredMixin, generic.ListView):
         context['playlists'] = Playlist.objects.filter(created_by=self.request.user)
         return context
 
+
 class PlaylistDetailView(LoginRequiredMixin, generic.DetailView):
     model = Playlist
     form_class = PlaylistForm
@@ -72,38 +73,24 @@ class PlaylistDetailView(LoginRequiredMixin, generic.DetailView):
         playlist = self.get_object()
 
         try:
-            token = SocialToken.objects.get(account__user=self.request.user, account__provider='spotify')
-            access_token = token.token
+            access_token = get_valid_spotify_token(self.request.user)
 
             # Fetch songs from Spotify
             spotify_tracks = get_playlist_tracks(access_token, playlist.spotify_id)
 
-            # Store them locally
-            track_ids = []
+            # Store them locally (without fetching audio features)
             for item in spotify_tracks:
-                track = item['track']
-                if track:  # sometimes null
-                    track_ids.append(track['id'])
+                track = item.get('track')
+                if track and track.get('id'):
                     Song.objects.update_or_create(
                         spotify_id=track['id'],
                         defaults={
                             'playlist': playlist,
-                            'title': track['name'],
-                            'artist': ', '.join(artist['name'] for artist in track['artists']),
-                            'album': track['album']['name'],
+                            'title': track.get('name'),
+                            'artist': ', '.join(artist['name'] for artist in track.get('artists', [])),
+                            'album': track.get('album', {}).get('name', ''),
                         }
                     )
-
-            # Fetch and store audio features (energy, danceability, etc.)
-            features = get_audio_features(access_token, track_ids)
-            for song in Song.objects.filter(playlist=playlist):
-                f = features.get(song.spotify_id)
-                if f:
-                    song.energy = f.get('energy')
-                    song.danceability = f.get('danceability')
-                    song.valence = f.get('valence')
-                    song.tempo = f.get('tempo')
-                    song.save()
 
         except SocialToken.DoesNotExist:
             context['error'] = "Spotify account not connected."
@@ -112,9 +99,15 @@ class PlaylistDetailView(LoginRequiredMixin, generic.DetailView):
         return context
 
     def get_success_url(self):
-        return reverse('playlist_detail', kwargs={'pk': self.object.pk})
+        return reverse('playlists:playlist_detail', kwargs={'pk': self.object.pk})
 
-class SongDetailView(LoginRequiredMixin, generic.DetailView):
-    model = Song
-    template_name = 'playlists/song_detail.html'
-    context_object_name = 'song'
+
+class PlaylistCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Playlist
+    form_class = PlaylistForm
+    template_name = 'playlists/playlist_create.html'
+    success_url = reverse_lazy('playlists:my_playlists')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)

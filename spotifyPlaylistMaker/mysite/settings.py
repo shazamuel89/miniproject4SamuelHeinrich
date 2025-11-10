@@ -157,6 +157,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'playlist-read-private',
             'playlist-modify-public',
             'playlist-modify-private',
+            'playlist-read-collaborative',
+            'user-library-read',
         ],
         'AUTH_PARAMS': {'show_dialog': 'true'},
     }
